@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="میری نوٹس">
+    
+    <title>میری نوٹس ایپ</title>
+    
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi2K/YsduM2K8g2KfZhNmF2YbYp9mG2K8iLCJzaG9ydF9uYW1lIjoi2KfZhNmF2YbYp9mG2K8iLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2Y1ZjVmNSIsInRoZW1lX2NvbG9yIjoiIzY2N2VlYSIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LEBASEVSRV9DT01FU19TVkdfQ09ERSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            padding-bottom: 80px;
+            -webkit-font-smoothing: antialiased;
+            overscroll-behavior-y: none;
+        }
+
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        .app-header h1 {
+            font-size: 1.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 2em;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+
+        .note-editor {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .note-editor.active {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .note-title-input, .note-content {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s;
+            -webkit-appearance: none;
+        }
+
+        .note-title-input {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .note-content {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .note-title-input:focus, .note-content:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tool-btn {
+            padding: 12px 8px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-weight: bold;
+            color: white;
+            min-height: 70px;
+            justify-content: center;
+        }
+
+        .tool-btn:active {
+            transform: scale(0.95);
+        }
+
+        .tool-btn .icon {
+            font-size: 1.5em;
+        }
+
+        .voice-btn { background: #e74c3c; }
+        .voice-btn.recording { 
+            background: #c0392b; 
+            animation: pulse 1s infinite;
+        }
+
+        .image-btn { background: #3498db; }
+        .screenshot-btn { background: #2ecc71; }
+        .audio-btn { background: #9b59b6; }
+        .bold-btn { background: #f39c12; }
+        .list-btn { background: #1abc9c; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .media-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .media-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .media-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-item audio {
+            width: 100%;
+            height: 100%;
+            padding: 5px;
+        }
+
+        .delete-media {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .save-btn, .cancel-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #ecf0f1;
+            color: #555;
+        }
+
+        .save-btn:active, .cancel-btn:active {
+            transform: scale(0.98);
+        }
+
+        .notes-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .note-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .note-card:active {
+            transform: scale(0.98);
+        }
+
+        .note-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .note-card h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.2em;
+            padding-left: 30px;
+        }
+
+        .note-card p {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+            color: white;
+        }
+
+        .edit-btn { background: #3498db; }
+        .delete-btn { background: #e74c3c; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .empty-state-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .empty-state h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .recording-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .recording-overlay.active {
+            display: flex;
+        }
+
+        .recording-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #e74c3c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            margin-bottom: 20px;
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7); }
+            70% { box-shadow: 0 0 0 30px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+        }
+
+        .stop-recording-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: white;
+            color: #e74c3c;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            display: none;
+            z-index: 3000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-right: 5px;
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .view-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 1500;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .view-modal.active {
+            display: block;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .close-modal {
+            background: #ecf0f1;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .modal-content {
+            line-height: 1.8;
+            color: #444;
+            font-size: 1.1em;
+            white-space: pre-wrap;
+        }
+
+        .modal-media {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .modal-media img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .modal-media audio {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <h1>📝 میری نوٹس ایپ</h1>
+        <p style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">وائس، تصاویر اور آڈیو کے ساتھ</p>
+    </div>
+
+    <button class="floating-btn" onclick="showEditor()">+</button>
+
+    <div class="note-editor" id="noteEditor">
+        <div class="input-group">
+            <input type="text" class="note-title-input" id="noteTitle" placeholder="عنوان یہاں لکھیں...">
+        </div>
+
+        <div class="toolbar">
+            <button class="tool-btn voice-btn" id="voiceBtn" onclick="toggleVoice()">
+                <span class="icon">🎤</span>
+                <span>وائس ٹو ٹیکسٹ</span>
+            </button>
+            <button class="tool-btn image-btn" onclick="document.getElementById('imageInput').click()">
+                <span class="icon">📷</span>
+                <span>تصویر</span>
+            </button>
+            <button class="tool-btn screenshot-btn" onclick="pasteImage()">
+                <span class="icon">📋</span>
+                <span>پیسٹ</span>
+            </button>
+            <button class="tool-btn audio-btn" onclick="toggleAudio()">
+                <span class="icon">🎙️</span>
+                <span>آڈیو</span>
+            </button>
+            <button class="tool-btn bold-btn" onclick="addFormat('**')">
+                <span class="icon">𝐁</span>
+                <span>بولڈ</span>
+            </button>
+            <button class="tool-btn list-btn" onclick="addFormat('• ')">
+                <span class="icon">☰</span>
+                <span>لسٹ</span>
+            </button>
+        </div>
+
+        <input type="file" id="imageInput" class="hidden-input" accept="image/*" multiple onchange="handleImages(event)">
+
+        <div class="input-group">
+            <textarea class="note-content" id="noteContent" placeholder="اپنا نوٹ یہاں لکھیں یا وائس بٹن دبائیں..."></textarea>
+        </div>
+
+        <div class="media-preview" id="mediaPreview"></div>
+
+        <div class="action-buttons">
+            <button class="cancel-btn" onclick="hideEditor()">منسوخ</button>
+            <button class="save-btn" onclick="saveNote()">محفوظ کریں</button>
+        </div>
+    </div>
+
+    <div class="notes-list" id="notesList"></div>
+
+    <div class="recording-overlay" id="recordingOverlay">
+        <div class="recording-circle">🎤</div>
+        <h2> سن رہے ہیں... </h2>
+        <p>براہ کرم بولنا شروع کریں</p>
+        <button class="stop-recording-btn" onclick="stopVoice()">⏹ روکیں</button>
+    </div>
+
+    <div class="view-modal" id="viewModal">
+        <div class="modal-header">
+            <h2 id="modalTitle"></h2>
+            <button class="close-modal" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-content" id="modalContent"></div>
+        <div class="modal-media" id="modalMedia"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Data Storage
+        let notes = JSON.parse(localStorage.getItem('myNotes')) || [];
+        let currentMedia = [];
+        let isVoiceRecording = false;
+        let isAudioRecording = false;
+        let recognition = null;
+        let audioRecorder = null;
+        let audioChunks = [];
+        let editingId = null;
+
+        // Initialize Speech Recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'ur-PK';
+            
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                if (transcript) {
+                    const textarea = document.getElementById('noteContent');
+                    textarea.value += (textarea.value ? ' ' : '') + transcript;
+                }
+            };
+            
+            recognition.onerror = function(event) {
+                showToast('خرابی: ' + event.error);
+                stopVoice();
+            };
+            
+            recognition.onend = function() {
+                if (isVoiceRecording) recognition.start();
+            };
+        }
+
+        // UI Functions
+        function showEditor() {
+            document.getElementById('noteEditor').classList.add('active');
+            document.querySelector('.floating-btn').style.display = 'none';
+            editingId = null;
+        }
+
+        function hideEditor() {
+            document.getElementById('noteEditor').classList.remove('active');
+            document.querySelector('.floating-btn').style.display = 'flex';
+            clearEditor();
+        }
+
+        function clearEditor() {
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            currentMedia = [];
+            renderMedia();
+            editingId = null;
+        }
+
+        // Voice to Text
+        function toggleVoice() {
+            if (!recognition) {
+                showToast('آپ کے فون میں وائس سپورٹ نہیں ہے');
+                return;
+            }
+            
+            if (isVoiceRecording) {
+                stopVoice();
+            } else {
+                isVoiceRecording = true;
+                document.getElementById('voiceBtn').classList.add('recording');
+                document.getElementById('recordingOverlay').classList.add('active');
+                recognition.start();
+                showToast(' بولنا شروع کریں ');
+            }
+        }
+
+        function stopVoice() {
+            if (recognition) {
+                isVoiceRecording = false;
+                recognition.stop();
+                document.getElementById('voiceBtn').classList.remove('recording');
+                document.getElementById('recordingOverlay').classList.remove('active');
+                showToast('وائس ختم');
+            }
+        }
+
+        // Audio Recording
+        async function toggleAudio() {
+            if (isAudioRecording) {
+                stopAudio();
+            } else {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    audioRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    audioRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    audioRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const url = URL.createObjectURL(blob);
+                        addMedia('audio', url);
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    
+                    audioRecorder.start();
+                    isAudioRecording = true;
+                    document.querySelector('.audio-btn').style.background = '#c0392b';
+                    showToast('آڈیو ریکارڈنگ شروع');
+                } catch (err) {
+                    showToast('مائیکروفون کی اجازت دیں');
+                }
+            }
+        }
+
+        function stopAudio() {
+            if (audioRecorder && isAudioRecording) {
+                audioRecorder.stop();
+                isAudioRecording = false;
+                document.querySelector('.audio-btn').style.background = '#9b59b6';
+                showToast('آڈیو محفوظ ہو گیا');
+            }
+        }
+
+        // Image Handling
+        function handleImages(event) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = e => addMedia('image', e.target.result);
+                reader.readAsDataURL(file);
+            });
+            event.target.value = '';
+        }
+
+        async function pasteImage() {
+            try {
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const url = URL.createObjectURL(blob);
+                            addMedia('image', url);
+                            showToast('تصویر پیسٹ ہو گئی');
+                            return;
+                        }
+                    }
+                }
+                showToast('پہلے سکرین شاٹ لیں (Volume Down + Power)');
+            } catch (err) {
+                showToast('پیسٹ نہیں ہو سکی');
+            }
+        }
+
+        // Media Management
+        function addMedia(type, src) {
+            currentMedia.push({ type, src, id: Date.now() });
+            renderMedia();
+        }
+
+        function removeMedia(index) {
+            currentMedia.splice(index, 1);
+            renderMedia();
+        }
+
+        function renderMedia() {
+            const container = document.getElementById('mediaPreview');
+            container.innerHTML = currentMedia.map((m, i) => `
+                <div class="media-item">
+                    ${m.type === 'image' 
+                        ? `<img src="${m.src}" alt="تصویر">` 
+                        : `<audio controls src="${m.src}"></audio>`
+                    }
+                    <button class="delete-media" onclick="removeMedia(${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        // Text Formatting
+        function addFormat(prefix) {
+            const textarea = document.getElementById('noteContent');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selected = text.substring(start, end);
+            
+            if (selected) {
+                textarea.value = text.substring(0, start) + prefix + selected + prefix + text.substring(end);
+            } else {
+                textarea.value = text.substring(0, start) + prefix + text.substring(start);
+            }
+        }
+
+        // Save Note
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            
+            if (!title && !content && currentMedia.length === 0) {
+                showToast('خالی نوٹ نہیں بن سکتا');
+                return;
+            }
+            
+            const note = {
+                id: editingId || Date.now(),
+                title: title || 'بغیر عنوان',
+                content: content,
+                media: [...currentMedia],
+                date: new Date().toLocaleString('ur-PK', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                })
+            };
+            
+            if (editingId) {
+                const idx = notes.findIndex(n => n.id === editingId);
+                notes[idx] = note;
+                showToast('نوٹ اپڈیٹ ہو گیا');
+            } else {
+                notes.unshift(note);
+                showToast('نوٹ محفوظ ہو گیا');
+            }
+            
+            localStorage.setItem('myNotes', JSON.stringify(notes));
+            hideEditor();
+            renderNotes();
+        }
+
+        // Render Notes
+        function renderNotes() {
+            const container = document.getElementById('notesList');
+            
+            if (notes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <h2>کوئی نوٹ نہیں</h2>
+                        <p>نیا نوٹ بنانے کے لیے + دبائیں</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = notes.map(note => `
+                <div class="note-card" onclick="viewNote(${note.id})">
+                    <h3>${note.title}</h3>
+                    <p>${note.content.substring(0, 80)}${note.content.length > 80 ? '...' : ''}</p>
+                    <div class="note-meta">
+                        <span>${note.date} ${note.media.length > 0 ? `<span class="badge">${note.media.length} میڈیا</span>` : ''}</span>
+                        <div class="note-actions" onclick="event.stopPropagation()">
+                            <button class="icon-btn edit-btn" onclick="editNote(${note.id})">✏️</button>
+                            <button class="icon-btn delete-btn" onclick="deleteNote(${note.id})">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // View Note
+        function viewNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+            
+            document.getElementById('modalTitle').textContent = note.title;
+            document.getElementById('modalContent').textContent = note.content || '(کوئی متن نہیں)';
+            
+            const mediaContainer = document.getElementById('modalMedia');
+            if (note.media.length > 0) {
+                mediaContainer.innerHTML = note.media.map(m => 
+                    m.type === 'image' 
+                        ? `<img src="${m.src}" onclick="window.open('${m.src}')">`
+                        : `<audio controls src="${m.src}"></audio>`
+                ).join('');
+                mediaContainer.style.display = 'grid';
+            } else {
+                mediaContainer.style.display = 'none';
+            }
+            
+            document.getElementById('viewModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('viewModal').classList.remove('active');
+        }
+
+        // Edit & Delete
+        function editNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (!note) return;
+            
+            document.getElementById('noteTitle').value = note.title;
+            document.getElementById('noteContent').value = note.content;
+            currentMedia = [...note.media];
+            renderMedia();
+            editingId = id;
+            showEditor();
+        }
+
+        function deleteNote(id) {
+            if (confirm('کیا واقعی حذف کریں؟')) {
+                notes = notes.filter(n => n.id !== id);
+                localStorage.setItem('myNotes', JSON.stringify(notes));
+                renderNotes();
+                showToast('حذف ہو گیا');
+            }
+        }
+
+        // Toast
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // Paste anywhere
+        document.addEventListener('paste', function(e) {
+            const items = e.clipboardData.items;
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    const blob = item.getAsFile();
+                    const url = URL.createObjectURL(blob);
+                    addMedia('image', url);
+                    showToast('تصویر پیسٹ ہو گئی');
+                }
+            }
+        });
+
+        // Init
+        renderNotes();
+
+        // Service Worker for offline
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,' + btoa(`
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+                self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+            `)).catch(() => {});
+        }
+    </script>
+</body>
+</html>
